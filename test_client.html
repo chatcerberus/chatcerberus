@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <input id="msg" placeholder="Digite uma mensagem">
+  <button onclick="send()">Enviar</button>
+  <div id="log"></div>
+  <script>
+    const ws = new WebSocket("ws://localhost:8000/ws/sala1");
+    ws.onmessage = e => document.getElementById("log").innerHTML += `<p>${e.data}</p>`;
+    function send() {
+      ws.send(document.getElementById("msg").value);
+    }
+  </script>
+</body>
+</html>

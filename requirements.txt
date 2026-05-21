@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+websockets
+aioredis
+asyncpg
+databases[asyncpg]
+python-dotenv
+pydantic
