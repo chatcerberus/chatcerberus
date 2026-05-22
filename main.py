@@ -3,30 +3,19 @@ import asyncio
 import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from dotenv import load_dotenv
-import databases
-import sqlalchemy
+from supabase import create_client, Client
 
 load_dotenv()
 
 SERVER_ID = os.getenv("SERVER_ID", "server1")
 REDIS_URL = os.getenv("REDIS_URL", None)
-DATABASE_URL = os.getenv("DATABASE_URL", None)
+SUPABASE_URL = os.getenv("SUPABASE_URL", None)
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", None)
 
 app = FastAPI()
 
-# --- Banco de dados ---
-database = databases.Database(DATABASE_URL) if DATABASE_URL else None
-
-metadata = sqlalchemy.MetaData()
-messages_table = sqlalchemy.Table(
-    "messages",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("room", sqlalchemy.String),
-    sqlalchemy.Column("content", sqlalchemy.String),
-    sqlalchemy.Column("server_id", sqlalchemy.String),
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=sqlalchemy.func.now()),
-)
+# --- Supabase ---
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 # --- ConnectionManager ---
 class ConnectionManager:
@@ -61,25 +50,22 @@ async def redis_listener():
 async def startup():
     global redis
     if REDIS_URL:
-        import aioredis
+        import redis.asyncio as aioredis
         redis = await aioredis.from_url(REDIS_URL)
         asyncio.create_task(redis_listener())
         print(f"[{SERVER_ID}] Redis conectado")
     else:
         print(f"[{SERVER_ID}] Redis não configurado — modo local apenas")
 
-    if database:
-        await database.connect()
-        print(f"[{SERVER_ID}] Banco conectado")
+    if supabase:
+        print(f"[{SERVER_ID}] Supabase conectado")
     else:
-        print(f"[{SERVER_ID}] Banco não configurado — histórico desativado")
+        print(f"[{SERVER_ID}] Supabase não configurado — histórico desativado")
 
 @app.on_event("shutdown")
 async def shutdown():
     if redis:
         await redis.close()
-    if database:
-        await database.disconnect()
 
 # --- Rotas ---
 @app.websocket("/ws/{room}")
@@ -90,14 +76,12 @@ async def websocket_endpoint(ws: WebSocket, room: str):
             data = await ws.receive_text()
             message = f"[{SERVER_ID}][{room}] {data}"
 
-            if database:
-                await database.execute(
-                    messages_table.insert().values(
-                        room=room,
-                        content=data,
-                        server_id=SERVER_ID
-                    )
-                )
+            if supabase:
+                supabase.table("mensagem").insert({
+                    "room": room,
+                    "content": data,
+                    "server_id": SERVER_ID
+                }).execute()
 
             if redis:
                 await redis.publish(f"room:{room}", message)
@@ -109,12 +93,7 @@ async def websocket_endpoint(ws: WebSocket, room: str):
 
 @app.get("/history/{room}")
 async def get_history(room: str):
-    if not database:
-        return {"error": "Banco não configurado"}
-    rows = await database.fetch_all(
-        messages_table.select()
-        .where(messages_table.c.room == room)
-        .order_by(messages_table.c.id.desc())
-        .limit(50)
-    )
-    return [dict(row) for row in rows]
+    if not supabase:
+        return {"error": "Supabase não configurado"}
+    result = supabase.table("mensagem").select("*").eq("room", room).order("id", desc=True).limit(50).execute()
+    return result.data
