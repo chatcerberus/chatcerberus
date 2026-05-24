@@ -20,3 +20,4 @@ https://console.upstash.com/redis/8a7b960a-bd0d-4d9e-b69b-c9e8ed624e1c?teamid=0
 https://supabase.com/dashboard/project/vbhinrljrnwvmccdizrk
 
 
+Até o momento, caso eles estejam conectados na mesma porta, o historico de comunicacao aparece. - funcão do ConnectionManager e do broadcast.
