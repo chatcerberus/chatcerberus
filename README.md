@@ -2,8 +2,11 @@
 Sistema distribuído de comunicação em tempo real
 
 ### comandos
-Rodar a main - teste: uvicorn main:app --reload
+Rodar a main - teste: uvicorn main:app --reload - unico servidor
 
+Para interagir entre servidores, roda assim em diferentes terminais
+Terminal 1 - SERVER_ID=server1 uvicorn main:app --port 8001
+Terminal 2 - SERVER_ID=server2 uvicorn main:app --port 8002
 
 ### Acessos
 
@@ -19,5 +22,13 @@ https://cerberus-backend-b.onrender.com
 https://console.upstash.com/redis/8a7b960a-bd0d-4d9e-b69b-c9e8ed624e1c?teamid=0
 https://supabase.com/dashboard/project/vbhinrljrnwvmccdizrk
 
+3. REDIS
 
-Até o momento, caso eles estejam conectados na mesma porta, o historico de comunicacao aparece. - funcão do ConnectionManager e do broadcast.
+Link: https://console.upstash.com/redis/727b6cc3-c3e4-4cf6-ab22-f3ab301122d4/details?teamid=0
+
+
+
+
+
+
+
