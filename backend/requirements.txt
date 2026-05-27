@@ -6,3 +6,4 @@ asyncpg
 databases[asyncpg]
 python-dotenv
 pydantic
+supabase
