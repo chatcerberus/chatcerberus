@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ChatCerberus
 
 > Sistema distribuído de comunicação em tempo real — construído por estudantes, rodando na nuvem, resistente a falhas.
@@ -233,7 +232,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 Trabalho desenvolvido para a disciplina de **Programação Distribuída**  
 Curso de Ciência da Computação — 5º Período
-=======
 # chatcerberus
 Sistema distribuído de comunicação em tempo real
 
@@ -255,7 +253,7 @@ Servidor B:
 https://cerberus-backend-b.onrender.com
 
 2. SUPABASE
-https://console.upstash.com/redis/8a7b960a-bd0d-4d9e-b69b-c9e8ed624e1c?teamid=0
+# https://console.upstash.com/redis/8a7b960a-bd0d-4d9e-b69b-c9e8ed624e1c?teamid=0
 https://supabase.com/dashboard/project/vbhinrljrnwvmccdizrk
 
 3. REDIS
@@ -268,4 +266,3 @@ Link: https://console.upstash.com/redis/727b6cc3-c3e4-4cf6-ab22-f3ab301122d4/det
 
 
 
->>>>>>> backend/aline
