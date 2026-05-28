@@ -2,6 +2,7 @@
 import asyncio
 import os
 import logging
+import redis.asyncio as aioredis
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from dotenv import load_dotenv
 
@@ -12,7 +13,6 @@ REDIS_URL = os.getenv("REDIS_URL", None)
 SUPABASE_URL = os.getenv("SUPABASE_URL", None)
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", None)
 
-# --- Logging ---
 logging.basicConfig(
     level=logging.INFO,
     format=f"[{SERVER_ID}] %(asctime)s %(levelname)s %(message)s",
@@ -22,7 +22,6 @@ log = logging.getLogger(SERVER_ID)
 
 app = FastAPI()
 
-# --- ConnectionManager ---
 class ConnectionManager:
     def __init__(self):
         self.rooms: dict[str, list[WebSocket]] = {}
@@ -37,36 +36,36 @@ class ConnectionManager:
         log.info(f"Cliente desconectou da sala '{room}' — total na sala: {len(self.rooms[room])}")
 
     async def broadcast_local(self, message: str, room: str):
-        total = len(self.rooms.get(room, []))
-        log.info(f"Broadcast na sala '{room}' para {total} cliente(s)")
-        for ws in self.rooms.get(room, []):
+        clientes = self.rooms.get(room, [])
+        log.info(f"broadcast_local — sala: '{room}', clientes: {len(clientes)}")
+        for ws in clientes:
             await ws.send_text(message)
 
 manager = ConnectionManager()
-redis = None
+redis_client = None  # <- renomeado para evitar conflito
 
 async def redis_listener():
-    pubsub = redis.pubsub()
+    pubsub = redis_client.pubsub()
     await pubsub.psubscribe("room:*")
     log.info("Redis listener iniciado — escutando room:*")
     async for message in pubsub.listen():
         if message["type"] == "pmessage":
             room = message["channel"].decode().split(":", 1)[1]
-            data = message["data"].decode()
-            log.info(f"Redis → mensagem recebida na sala '{room}'")
-            await manager.broadcast_local(data, room)
+            payload = message["data"].decode()
+            origin_server, data = payload.split("|", 1)
+            log.info(f"Redis → mensagem de '{origin_server}' na sala '{room}'")
+            if origin_server != SERVER_ID:
+                await manager.broadcast_local(data, room)
 
 def get_supabase():
     from supabase import create_client
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- Startup / Shutdown ---
 @app.on_event("startup")
 async def startup():
-    global redis
+    global redis_client
     if REDIS_URL:
-        import redis.asyncio as aioredis
-        redis = await aioredis.from_url(REDIS_URL)
+        redis_client = await aioredis.from_url(REDIS_URL)
         asyncio.create_task(redis_listener())
         log.info("Redis conectado")
     else:
@@ -80,15 +79,13 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     log.info("Servidor encerrando...")
-    if redis:
-        await redis.close()
+    if redis_client:
+        await redis_client.close()
 
-# --- Rotas ---
 @app.websocket("/ws/{room}")
 async def websocket_endpoint(ws: WebSocket, room: str):
     await manager.connect(ws, room)
-    
-    # carrega histórico ao entrar
+
     if SUPABASE_URL and SUPABASE_KEY:
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(None, lambda: get_supabase().table("mensagem").select("*").eq("room", room).order("id").limit(50).execute())
@@ -110,8 +107,9 @@ async def websocket_endpoint(ws: WebSocket, room: str):
                 }).execute())
                 log.info(f"Mensagem salva no Supabase — sala: '{room}'")
 
-            if redis:
-                await redis.publish(f"room:{room}", data)
+            if redis_client:
+                await manager.broadcast_local(data, room)
+                await redis_client.publish(f"room:{room}", f"{SERVER_ID}|{data}")
                 log.info(f"Mensagem publicada no Redis — sala: '{room}'")
             else:
                 await manager.broadcast_local(data, room)
