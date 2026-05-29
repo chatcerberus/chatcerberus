@@ -184,4 +184,10 @@ src/routeTree.gen.ts
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.swg
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.vercel
