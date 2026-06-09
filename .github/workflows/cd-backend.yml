@@ -1,0 +1,21 @@
+name: CD Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: []
+
+    steps:
+      - name: Deploy Servidor A
+        run: |
+          curl -s "${{ secrets.RENDER_DEPLOY_HOOK_A }}" -X POST
+
+      - name: Deploy Servidor B
+        run: |
+          curl -s "${{ secrets.RENDER_DEPLOY_HOOK_B }}" -X POST

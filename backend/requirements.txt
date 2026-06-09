@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+websockets
+redis
+asyncpg
+databases[asyncpg]
+python-dotenv
+pydantic
+supabase

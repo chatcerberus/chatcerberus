@@ -1,6 +1,6 @@
-# ChatCerberus
+﻿# ChatCerberus
 
-> Sistema distribuído de comunicação em tempo real — construído por estudantes, rodando na nuvem, resistente a falhas.
+> Sistema distribuido de comunicacao em tempo real — construido por estudantes, rodando na nuvem, resistente a falhas.
 
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -9,226 +9,170 @@
 
 ---
 
-## 📌 Sobre o Projeto
+## Sobre o Projeto
 
-O **ChatCerberus** é um mini sistema de mensagens distribuído desenvolvido como trabalho acadêmico para a disciplina de **Programação Distribuída**. 
+O **ChatCerberus** e um mini sistema de mensagens distribuido desenvolvido como trabalho academico para a disciplina de **Programacao Distribuida**.
 
-O sistema demonstra na prática os principais conceitos de sistemas distribuídos:
+O sistema demonstra na pratica os principais conceitos de sistemas distribuidos:
 
-- **Tolerância a falhas** — se um servidor cair, o chat continua funcionando
-- **Transparência de localização** — o cliente não sabe em qual servidor está conectado
-- **Consistência** — todas as mensagens passam por um barramento central (Redis)
-- **Escalabilidade horizontal** — basta subir novas instâncias do backend
-- **Concorrência** — múltiplos usuários simultâneos via WebSocket
+- **Tolerancia a falhas** — se um servidor cair, o chat continua funcionando
+- **Transparencia de localizacao** — o cliente nao sabe em qual servidor esta conectado
+- **Consistencia** — todas as mensagens passam por um barramento central (Redis)
+- **Escalabilidade horizontal** — basta subir novas instancias do backend
+- **Concorrencia** — multiplos usuarios simultaneos via WebSocket
 
 ---
 
-## 🏗️ Arquitetura
-
-```
-          ┌─────────────────────────────────────┐
-          │             CLIENTES                │
-          │   Browser A          Browser B      │
-          └────────┬─────────────────┬──────────┘
-                   │ WebSocket       │ WebSocket
-          ┌────────▼─────────────────▼──────────┐
-          │           BACKEND (2 instâncias)    │
-          │                                     │
-          │  ┌────────────┐  ┌────────────┐     │
-          │  │ Servidor A │  │ Servidor B │     │
-          │  │ (Render 1) │  │ (Render 2) │     │
-          │  │  FastAPI   │  │  FastAPI   │     │
-          │  └─────┬──────┘  └──────┬─────┘     │
-          └────────┼────────────────┼────────────┘
-                   └───────┬────────┘
-              ┌────────────┴────────────┐
-              ▼                         ▼
-   ┌──────────────────┐   ┌─────────────────────────┐
-   │  Redis (Upstash) │   │  PostgreSQL (Supabase)  │
-   │  Pub/Sub         │   │  Histórico de mensagens │
-   └──────────────────┘   └─────────────────────────┘
-```
-
+## Arquitetura
++-------------------------------------+
+      |             CLIENTES                |
+      |   Browser A          Browser B      |
+      +--------+------------------+---------+
+               | WebSocket        | WebSocket
+      +--------v------------------v---------+
+      |         BACKEND (2 instancias)      |
+      |                                     |
+      |  +------------+  +------------+     |
+      |  | Servidor A |  | Servidor B |     |
+      |  | (Render 1) |  | (Render 2) |     |
+      |  |  FastAPI   |  |  FastAPI   |     |
+      |  +-----+------+  +------+-----+     |
+      +--------+----------------+-----------+
+               +---------+------+
+          +----+----------+----+
+          v                    v
++------------------+   +-------------------------+
+|  Redis (Upstash) |   |  PostgreSQL (Supabase)  |
+|  Pub/Sub         |   |  Historico de mensagens |
++------------------+   +-------------------------+
 ### Fluxo de uma mensagem
 
-1. Usuário digita no Browser A → Servidor A recebe via WebSocket
-2. Servidor A salva no PostgreSQL (persistência)
+1. Usuario digita no Browser A → Servidor A recebe via WebSocket
+2. Servidor A salva no PostgreSQL (persistencia)
 3. Servidor A publica no canal Redis `sala:geral`
 4. **Todos** os servidores ouvem o Redis e entregam para seus clientes conectados
 
 ---
 
-## 🛠️ Tecnologias
+## Tecnologias
 
-| Camada | Tecnologia | Versão |
+| Camada | Tecnologia | Versao |
 |--------|-----------|--------|
 | Backend | Python + FastAPI | 3.10+ / 0.104+ |
 | WebSocket | Uvicorn + websockets | 0.24+ / 12.0+ |
 | Mensageria | Redis Pub/Sub (Upstash) | 5.0+ |
 | Banco de dados | PostgreSQL (Supabase) | - |
-| Frontend | React + Vite | 18+ / 4+ |
+| Frontend | React + Vite + TypeScript | 18+ / 5+ |
 | Deploy Backend | Render | - |
 | Deploy Frontend | Vercel | - |
 
 ---
 
-## 👥 Equipe
+## Equipe
 
 | Papel | Responsabilidades |
 |-------|------------------|
-| 👨‍💻 Pessoa 1: Aline Matoso de Lima — Backend | Python, FastAPI, WebSocket, Redis Pub/Sub, PostgreSQL |
-| 🎨 Pessoa 2: Pedro Henrique dos Santos da Silva — Frontend | React, WebSocket client, fallback automático, UI |
-| ☁️ Pessoa 3: Helena Bury Santos — DevOps | Infraestrutura, deploy, testes de falha, documentação |
+| Pessoa 1: Aline Matoso de Lima — Backend | Python, FastAPI, WebSocket, Redis Pub/Sub, PostgreSQL |
+| Pessoa 2: Pedro Henrique dos Santos da Silva — Frontend | React, WebSocket client, fallback automatico, UI |
+| Pessoa 3: Helena Bury Santos — DevOps | Infraestrutura, deploy, CI/CD, testes, documentacao |
 
 ---
 
-## 📁 Estrutura do Repositório
-
-```
+## Estrutura do Repositorio
 chatcerberus/
 ├── backend/
 │   ├── main.py              # Servidor FastAPI + WebSocket
-│   ├── database.py          # Conexão com PostgreSQL
-│   ├── redis_client.py      # Conexão com Redis
-│   ├── websocket_manager.py # Gerenciamento de conexões
-│   ├── models.py            # Estruturas de dados (Pydantic)
-│   └── requirements.txt     # Dependências Python
+│   ├── requirements.txt     # Dependencias Python
+│   └── test_main.py         # Testes automatizados
 ├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── components/
-│   │   │   ├── Chat.jsx
-│   │   │   ├── MessageList.jsx
-│   │   │   ├── MessageInput.jsx
-│   │   │   └── StatusBar.jsx
-│   │   └── hooks/
-│   │       └── useWebSocket.js
-│   ├── package.json
-│   └── vite.config.js
+│   └── react-vite-tanstack-ts/  # Projeto React + Vite + TS
+├── .github/
+│   └── workflows/
+│       ├── ci-backend.yml   # CI do backend
+│       ├── ci-frontend.yml  # CI do frontend
+│       ├── cd-backend.yml   # CD para o Render
+│       └── cd-frontend.yml  # CD para o Vercel
 ├── docs/
-│   ├── architecture.md      # Diagramas e explicações
-│   ├── deploy.md            # Guia de deploy
-│   └── tests.md             # Como testar falhas
 ├── scripts/
-│   ├── setup_local.sh       # Setup do ambiente local
-│   └── test_failure.sh      # Simula queda de servidor
-├── .env.example             # Variáveis de ambiente (template)
+├── .env.example
 └── README.md
-```
-
 ---
 
-## 🚀 Como Rodar Localmente
+## Como Rodar Localmente
 
-### Pré-requisitos
+### Pre-requisitos
 
 - Python 3.10+
-- Node.js 18+
+- Node.js 20+
 - Git
 
 ### Backend
 
-```bash
-# Entrar na pasta do backend
+`ash
 cd backend
-
-# Criar e ativar ambiente virtual
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-
-# Instalar dependências
 pip install -r requirements.txt
-
-# Configurar variáveis de ambiente
 cp ../.env.example .env
-# Editar .env com suas credenciais
-
-# Rodar o servidor
 uvicorn main:app --reload --port 8000
-```
+`
 
 ### Frontend
 
-```bash
-# Entrar na pasta do frontend
-cd frontend
-
-# Instalar dependências
+`ash
+cd frontend/react-vite-tanstack-ts
 npm install
-
-# Rodar em modo desenvolvimento
 npm run dev
-```
+`
 
-### Rodar 2 servidores localmente (para testar distribuição)
+### Rodar 2 servidores localmente
 
-```bash
+`ash
 # Terminal 1 — Servidor A
 SERVER_ID=server-a uvicorn main:app --port 8000
 
 # Terminal 2 — Servidor B
 SERVER_ID=server-b uvicorn main:app --port 8001
-```
+`
 
 ---
 
-## ☁️ Deploy
+## Deploy
 
-Os serviços estão hospedados gratuitamente:
-
-| Serviço | URL | Plataforma |
+| Servico | URL | Plataforma |
 |---------|-----|-----------|
-| Backend A | `https://chatcerberus-a.onrender.com` | Render |
-| Backend B | `https://chatcerberus-b.onrender.com` | Render |
-| Frontend | `https://chatcerberus.vercel.app` | Vercel |
-| Redis | Upstash (São Paulo) | Upstash |
-| PostgreSQL | Supabase (São Paulo) | Supabase |
-
-> Consulte [docs/deploy.md](docs/deploy.md) para o guia completo de deploy.
+| Backend A | https://cerberus-backend-a.onrender.com | Render |
+| Backend B | https://cerberus-backend-b.onrender.com | Render |
+| Frontend | https://chatcerberus.vercel.app | Vercel |
+| Redis | Upstash (Sao Paulo) | Upstash |
+| PostgreSQL | Supabase (Sao Paulo) | Supabase |
 
 ---
 
-## 🧪 Testando a Tolerância a Falhas
+## CI/CD
 
-```bash
-# Verificar se todos os servidores estão no ar
-./scripts/health_check.sh
-
-# Simular queda do Servidor A
-./scripts/test_failure.sh
-```
-
-Para o teste manual:
-1. Abra dois navegadores conectados ao chat
-2. Envie mensagens — funcionando normalmente
-3. Derrube o Servidor A no painel do Render (Suspend)
-4. Observe o frontend reconectar automaticamente no Servidor B
-5. Continue enviando mensagens — o chat não interrompeu
-
-> Consulte [docs/tests.md](docs/tests.md) para o guia completo de testes.
+| Workflow | Gatilho | Acao |
+|----------|---------|------|
+| ci-backend.yml | PR para main ou dev (backend/**) | Instala dependencias + roda testes |
+| ci-frontend.yml | PR para main ou dev (frontend/**) | Instala dependencias + build |
+| cd-backend.yml | Push na main (backend/**) | Deploy nos servidores A e B no Render |
+| cd-frontend.yml | Push na main (frontend/**) | Deploy no Vercel |
 
 ---
 
-## 🌿 Branches
+## Branches
+main              <- producao (estavel)
+dev               <- integracao
+backend/pessoa1   <- desenvolvimento backend
+frontend/pessoa2  <- desenvolvimento frontend
+devops/pessoa3    <- infraestrutura e documentacao
+---
 
-```
-main              ← produção (estável)
-dev               ← integração
-backend/pessoa1   ← desenvolvimento backend
-frontend/pessoa2  ← desenvolvimento frontend
-devops/pessoa3    ← infraestrutura e documentação
-```
+## Licenca
+
+Este projeto esta sob a licenca MIT.
 
 ---
 
-## 📄 Licença
+## Disciplina
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-## 📚 Disciplina
-
-Trabalho desenvolvido para a disciplina de **Programação Distribuída**  
-Curso de Ciência da Computação — 5º Período
+Trabalho desenvolvido para a disciplina de **Programacao Distribuida**
+Curso de Ciencia da Computacao — 5o Periodo

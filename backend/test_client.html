@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <input id="name" placeholder="Seu nome" value="Aninha">
+  <br><br>
+  
+  <b>Chat em grupo:</b><br>
+  <input id="group-room" placeholder="Nome da sala" value="sala1">
+  <button onclick="connectGroup()">Entrar no grupo</button>
+  <br><br>
+  
+  <b>Chat privado:</b><br>
+  <input id="private-user" placeholder="Nome do outro usuário" value="Helena">
+  <button onclick="connectPrivate()">Chat privado</button>
+  <hr>
+  
+  <input id="msg" placeholder="Digite uma mensagem">
+  <button onclick="send()">Enviar</button>
+  <div id="status"></div>
+  <hr>
+  <div id="log"></div>
+
+  <script>
+    var ws;
+    var myName;
+
+    function connectGroup() {
+      myName = document.getElementById("name").value;
+      const room = document.getElementById("group-room").value;
+      const port = 8001;  // grupos sempre no server1
+      wsConnect(room, port, "grupo");
+    }
+
+    function connectPrivate() {
+      myName = document.getElementById("name").value;
+      const other = document.getElementById("private-user").value;
+      // cria sala privada ordenando os nomes para ser sempre a mesma
+      const room = "private_" + [myName, other].sort().join("_");
+      const port = 8002;  // privado sempre no server2
+      wsConnect(room, port, "privado");
+    }
+
+    function wsConnect(room, port, type) {
+      ws = new WebSocket("ws://localhost:" + port + "/ws/" + room);
+      ws.onmessage = function(e) {
+        const isHistory = e.data.startsWith("[histórico]");
+        const color = isHistory ? "gray" : "black";
+        const style = isHistory ? "font-style:italic" : "font-weight:bold";
+        document.getElementById("log").innerHTML += `<p style="color:${color};${style}">${e.data}</p>`;
+      };
+      ws.onopen = function() {
+        document.getElementById("status").innerHTML = `<b>Conectado — ${type} — sala: ${room} — porta: ${port}</b>`;
+        document.getElementById("log").innerHTML = "";
+      };
+    }
+
+    function send() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const msg = myName + ": " + document.getElementById("msg").value;
+        ws.send(msg);
+        document.getElementById("msg").value = "";
+      } else {
+        alert("Conecte primeiro!");
+      }
+    }
+  </script>
+</body>
+</html>
